@@ -3,6 +3,7 @@ package br.com.senai.desafio.tech_challenge.service;
 import br.com.senai.desafio.tech_challenge.dto.ProductRequestDTO;
 import br.com.senai.desafio.tech_challenge.dto.ProductResponseDTO;
 import br.com.senai.desafio.tech_challenge.exception.ResourceConflictException;
+import br.com.senai.desafio.tech_challenge.exception.ResourceNotFoundException;
 import br.com.senai.desafio.tech_challenge.model.Product;
 import br.com.senai.desafio.tech_challenge.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,14 @@ public class ProductServiceImpl implements ProductService {
 
         // Converte a entidade salva para o DTO de resposta e retorna
         return mapToProductResponseDTO(savedProduct);
+    }
+
+    @Override
+    public ProductResponseDTO getProductById(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Produto com ID " + id + " não encontrado."));
+
+        return mapToProductResponseDTO(product);
     }
 
     /**
