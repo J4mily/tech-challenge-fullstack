@@ -14,8 +14,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.stream.Collectors;
 
 @Service
@@ -102,4 +104,29 @@ public class ProductServiceImpl implements ProductService {
                 .updatedAt(product.getUpdatedAt())
                 .build();
     }
+    @Override
+    @Transactional
+    public void deleteProduct(Long id) {
+        // Primeiro, verificamos se o produto existe e está ativo.
+        // Se não existir, findById já lançará uma exceção ou podemos tratar aqui.
+        if (!productRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Produto com ID " + id + " não encontrado para exclusão.");
+        }
+        // O JpaRepository vai usar a nossa anotação @SQLDelete para fazer o soft-delete.
+        productRepository.deleteById(id);
+    }
+@Override
+@Transactional
+public ProductResponseDTO restoreProduct(Long id) {
+    productRepository.findInactiveById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Produto com ID " + id + " não está inativo ou não existe."));
+
+    Instant currentTime = Instant.now();
+    int rowsAffected = productRepository.restoreById(id, currentTime);
+
+    if (rowsAffected == 0) {
+        throw new ResourceNotFoundException("Falha ao restaurar o produto com ID " + id + ". Nenhuma linha foi afetada.");
+    }
+    return getProductById(id);
+}
 }

@@ -16,4 +16,6 @@ public interface ProductService {
             BigDecimal minPrice,
             BigDecimal maxPrice
     );
+    void deleteProduct(Long id);
+    ProductResponseDTO restoreProduct(Long id);
 }

@@ -7,6 +7,7 @@ import br.com.senai.desafio.tech_challenge.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -52,5 +53,16 @@ public class ProductController {
     ) {
         PaginatedResponseDTO<ProductResponseDTO> response = productService.listProducts(pageable, search, minPrice, maxPrice);
         return ResponseEntity.ok(response);
+    }
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT) // Retorna 204 No Content em caso de sucesso
+    public void deleteProduct(@PathVariable Long id) {
+        productService.deleteProduct(id);
+    }
+
+    @PostMapping("/{id}/restore")
+    public ResponseEntity<ProductResponseDTO> restoreProduct(@PathVariable Long id) {
+        ProductResponseDTO restoredProduct = productService.restoreProduct(id);
+        return ResponseEntity.ok(restoredProduct);
     }
 }
