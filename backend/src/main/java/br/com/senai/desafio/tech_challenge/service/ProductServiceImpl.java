@@ -1,42 +1,42 @@
 package br.com.senai.desafio.tech_challenge.service;
 
+import br.com.senai.desafio.tech_challenge.dto.MetaDTO;
+import br.com.senai.desafio.tech_challenge.dto.PaginatedResponseDTO;
 import br.com.senai.desafio.tech_challenge.dto.ProductRequestDTO;
 import br.com.senai.desafio.tech_challenge.dto.ProductResponseDTO;
 import br.com.senai.desafio.tech_challenge.exception.ResourceConflictException;
 import br.com.senai.desafio.tech_challenge.exception.ResourceNotFoundException;
 import br.com.senai.desafio.tech_challenge.model.Product;
 import br.com.senai.desafio.tech_challenge.repository.ProductRepository;
+import br.com.senai.desafio.tech_challenge.repository.ProductSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.stream.Collectors;
+
 @Service
-@RequiredArgsConstructor // Lombok: cria um construtor com os campos 'final'.
+@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
 
     @Override
     public ProductResponseDTO createProduct(ProductRequestDTO productRequestDTO) {
-        // Normaliza o nome para a verificação de duplicidade.
         String normalizedName = normalizeName(productRequestDTO.getName());
-
-        // Verifica se um produto com o nome normalizado já existe.
         productRepository.findByName(normalizedName).ifPresent(product -> {
             throw new ResourceConflictException("Já existe um produto com o nome '" + productRequestDTO.getName() + "'.");
         });
-
-        // Converte o DTO para a entidade Product
         Product newProduct = Product.builder()
-                .name(normalizedName) // Salva o nome já normalizado para consistência
+                .name(normalizedName)
                 .description(productRequestDTO.getDescription())
                 .price(productRequestDTO.getPrice())
                 .stock(productRequestDTO.getStock())
                 .build();
-
-        // Salva o novo produto no banco de dados
         Product savedProduct = productRepository.save(newProduct);
-
-        // Converte a entidade salva para o DTO de resposta e retorna
         return mapToProductResponseDTO(savedProduct);
     }
 
@@ -44,14 +44,42 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponseDTO getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Produto com ID " + id + " não encontrado."));
-
         return mapToProductResponseDTO(product);
     }
 
-    /**
-     * Normaliza uma string de nome para um formato padrão.
-     * Remove espaços extras e converte para minúsculas.
-     */
+    @Override
+    public PaginatedResponseDTO<ProductResponseDTO> listProducts(
+            Pageable pageable, String search, BigDecimal minPrice, BigDecimal maxPrice) {
+
+        Specification<Product> spec = Specification.where(null); // Começa com uma especificação "vazia".
+
+        // Adiciona cada filtro condicionalmente.
+        if (search != null && !search.isEmpty()) {
+            spec = spec.and(ProductSpecification.hasText(search));
+        }
+        if (minPrice != null) {
+            spec = spec.and(ProductSpecification.hasMinPrice(minPrice));
+        }
+        if (maxPrice != null) {
+            spec = spec.and(ProductSpecification.hasMaxPrice(maxPrice));
+        }
+
+        Page<Product> productPage = productRepository.findAll(spec, pageable);
+
+        var productDTOs = productPage.getContent().stream()
+                .map(this::mapToProductResponseDTO)
+                .collect(Collectors.toList());
+
+        MetaDTO meta = MetaDTO.builder()
+                .page(productPage.getNumber())
+                .limit(productPage.getSize())
+                .totalItems(productPage.getTotalElements())
+                .totalPages(productPage.getTotalPages())
+                .build();
+
+        return new PaginatedResponseDTO<>(productDTOs, meta);
+    }
+
     private String normalizeName(String name) {
         if (name == null) {
             return null;
@@ -59,21 +87,17 @@ public class ProductServiceImpl implements ProductService {
         return name.trim().replaceAll("\\s+", " ").toLowerCase();
     }
 
-    /**
-     * Mapeia uma entidade Product para um ProductResponseDTO.
-     */
     private ProductResponseDTO mapToProductResponseDTO(Product product) {
-        // Neste momento, finalPrice é igual ao preço original pois não há descontos.
         return ProductResponseDTO.builder()
                 .id(product.getId())
-                .name(product.getName()) // Retorna o nome normalizado
+                .name(product.getName())
                 .description(product.getDescription())
                 .stock(product.getStock())
                 .price(product.getPrice())
-                .finalPrice(product.getPrice()) // Lógica de desconto virá no futuro
+                .finalPrice(product.getPrice())
                 .isOutOfStock(product.getStock() == 0)
-                .hasCouponApplied(false) // Lógica de cupom virá no futuro
-                .discount(null) // Lógica de desconto virá no futuro
+                .hasCouponApplied(false)
+                .discount(null)
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .build();
