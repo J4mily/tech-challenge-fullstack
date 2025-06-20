@@ -1,9 +1,6 @@
 package br.com.senai.desafio.tech_challenge.service;
 
-import br.com.senai.desafio.tech_challenge.dto.MetaDTO;
-import br.com.senai.desafio.tech_challenge.dto.PaginatedResponseDTO;
-import br.com.senai.desafio.tech_challenge.dto.ProductRequestDTO;
-import br.com.senai.desafio.tech_challenge.dto.ProductResponseDTO;
+import br.com.senai.desafio.tech_challenge.dto.*;
 import br.com.senai.desafio.tech_challenge.exception.ResourceConflictException;
 import br.com.senai.desafio.tech_challenge.exception.ResourceNotFoundException;
 import br.com.senai.desafio.tech_challenge.model.Product;
@@ -129,4 +126,37 @@ public ProductResponseDTO restoreProduct(Long id) {
     }
     return getProductById(id);
 }
+
+    @Override
+    @Transactional
+    public ProductResponseDTO updateProduct(Long id, ProductUpdateDTO productUpdateDTO) {
+        Product productToUpdate = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Produto com ID " + id + " não encontrado para atualização."));
+
+        if (productUpdateDTO.getName() != null) {
+            String normalizedName = normalizeName(productUpdateDTO.getName());
+            productRepository.findByName(normalizedName).ifPresent(existingProduct -> {
+                if (!existingProduct.getId().equals(id)) {
+                    throw new ResourceConflictException("O nome '" + productUpdateDTO.getName() + "' já está em uso por outro produto.");
+                }
+            });
+            productToUpdate.setName(normalizedName);
+        }
+
+        if (productUpdateDTO.getDescription() != null) {
+            productToUpdate.setDescription(productUpdateDTO.getDescription());
+        }
+
+        if (productUpdateDTO.getStock() != null) {
+            productToUpdate.setStock(productUpdateDTO.getStock());
+        }
+
+        if (productUpdateDTO.getPrice() != null) {
+            productToUpdate.setPrice(productUpdateDTO.getPrice());
+        }
+
+        Product updatedProduct = productRepository.save(productToUpdate);
+
+        return mapToProductResponseDTO(updatedProduct);
+    }
 }

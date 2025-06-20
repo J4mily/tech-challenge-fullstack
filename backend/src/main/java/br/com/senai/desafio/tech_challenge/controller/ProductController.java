@@ -3,6 +3,7 @@ package br.com.senai.desafio.tech_challenge.controller;
 import br.com.senai.desafio.tech_challenge.dto.PaginatedResponseDTO;
 import br.com.senai.desafio.tech_challenge.dto.ProductRequestDTO;
 import br.com.senai.desafio.tech_challenge.dto.ProductResponseDTO;
+import br.com.senai.desafio.tech_challenge.dto.ProductUpdateDTO;
 import br.com.senai.desafio.tech_challenge.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -64,5 +65,12 @@ public class ProductController {
     public ResponseEntity<ProductResponseDTO> restoreProduct(@PathVariable Long id) {
         ProductResponseDTO restoredProduct = productService.restoreProduct(id);
         return ResponseEntity.ok(restoredProduct);
+    }
+    @PatchMapping("/{id}")
+    public ResponseEntity<ProductResponseDTO> updateProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductUpdateDTO productUpdateDTO) {
+        ProductResponseDTO updatedProduct = productService.updateProduct(id, productUpdateDTO);
+        return ResponseEntity.ok(updatedProduct);
     }
 }
