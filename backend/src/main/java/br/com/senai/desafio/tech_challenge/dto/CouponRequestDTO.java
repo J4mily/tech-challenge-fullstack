@@ -1,11 +1,13 @@
 package br.com.senai.desafio.tech_challenge.dto;
 import br.com.senai.desafio.tech_challenge.model.CouponType;
+import br.com.senai.desafio.tech_challenge.validator.ValidCouponRequest;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
+@ValidCouponRequest
 public class CouponRequestDTO {
 
     @NotBlank(message = "O código do cupom não pode ser vazio.")

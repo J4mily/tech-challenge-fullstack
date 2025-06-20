@@ -29,11 +29,11 @@ public class Coupon {
     @Column(nullable = false, unique = true, length = 20)
     private String code;
 
-    @Enumerated(EnumType.STRING) // Diz ao JPA para guardar o nome do enum ("FIXED" ou "PERCENT")
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "coupon_type", nullable = false)
     private CouponType type;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(name = "discount_value", nullable = false, precision = 10, scale = 2)
     private BigDecimal value;
 
     @Column(name = "one_shot", nullable = false)
