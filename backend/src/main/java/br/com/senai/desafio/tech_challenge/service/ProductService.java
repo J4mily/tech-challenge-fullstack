@@ -1,10 +1,7 @@
 package br.com.senai.desafio.tech_challenge.service;
 
-import br.com.senai.desafio.tech_challenge.dto.PaginatedResponseDTO;
-import br.com.senai.desafio.tech_challenge.dto.ProductRequestDTO;
-import br.com.senai.desafio.tech_challenge.dto.ProductResponseDTO;
+import br.com.senai.desafio.tech_challenge.dto.*;
 
-import br.com.senai.desafio.tech_challenge.dto.ProductUpdateDTO;
 import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 
@@ -20,5 +17,9 @@ public interface ProductService {
     void deleteProduct(Long id);
     ProductResponseDTO restoreProduct(Long id);
     ProductResponseDTO updateProduct(Long id, ProductUpdateDTO productUpdateDTO);
+    ProductResponseDTO applyCoupon(Long productId, ApplyCouponDTO applyCouponDTO);
+    void removeDiscount(Long productId);
+    ProductResponseDTO applyPercentageDiscount(Long productId, ApplyPercentageDiscountDTO dto);
+
 
 }

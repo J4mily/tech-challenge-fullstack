@@ -1,9 +1,6 @@
 package br.com.senai.desafio.tech_challenge.controller;
 
-import br.com.senai.desafio.tech_challenge.dto.PaginatedResponseDTO;
-import br.com.senai.desafio.tech_challenge.dto.ProductRequestDTO;
-import br.com.senai.desafio.tech_challenge.dto.ProductResponseDTO;
-import br.com.senai.desafio.tech_challenge.dto.ProductUpdateDTO;
+import br.com.senai.desafio.tech_challenge.dto.*;
 import br.com.senai.desafio.tech_challenge.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -72,5 +69,22 @@ public class ProductController {
             @Valid @RequestBody ProductUpdateDTO productUpdateDTO) {
         ProductResponseDTO updatedProduct = productService.updateProduct(id, productUpdateDTO);
         return ResponseEntity.ok(updatedProduct);
+    }
+    @PostMapping("/{id}/discount/coupon")
+    public ResponseEntity<ProductResponseDTO> applyCoupon(
+            @PathVariable("id") Long productId,
+            @Valid @RequestBody ApplyCouponDTO applyCouponDTO) {
+        return ResponseEntity.ok(productService.applyCoupon(productId, applyCouponDTO));
+    }
+    @DeleteMapping("/{id}/discount")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeDiscount(@PathVariable("id") Long productId) {
+        productService.removeDiscount(productId);
+    }
+    @PostMapping("/{id}/discount/percent")
+    public ResponseEntity<ProductResponseDTO> applyPercentageDiscount(
+            @PathVariable("id") Long productId,
+            @Valid @RequestBody ApplyPercentageDiscountDTO dto) {
+        return ResponseEntity.ok(productService.applyPercentageDiscount(productId, dto));
     }
 }

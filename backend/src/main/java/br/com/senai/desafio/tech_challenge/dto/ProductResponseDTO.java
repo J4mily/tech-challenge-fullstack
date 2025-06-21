@@ -20,11 +20,13 @@ public class ProductResponseDTO {
     private String name;
     private String description;
     private Integer stock;
-    @JsonProperty("is_out_of_stock") // Define o nome do campo no JSON
+    @JsonProperty("is_out_of_stock")
     private boolean isOutOfStock;
     private BigDecimal price;
-    private BigDecimal finalPrice; // Será calculado dinamicamente
-    private Object discount; // Será um objeto com detalhes do desconto
+    private BigDecimal finalPrice;
+
+    private AppliedDiscountDTO discount;
+
     @JsonProperty("has_coupon_applied")
     private boolean hasCouponApplied;
     @JsonProperty("created_at")
