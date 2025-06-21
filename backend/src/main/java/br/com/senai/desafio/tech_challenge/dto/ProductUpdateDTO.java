@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 public class ProductUpdateDTO {
 
     // Os campos não são @NotBlank ou @NotNull porque eles podem não ser enviados na requisição de PATCH.
-
     @Size(min = 3, max = 100, message = "O nome deve ter entre 3 e 100 caracteres.")
     @Pattern(regexp = "^[\\p{L}0-9\\s\\-_,.]+$", message = "Nome contém caracteres inválidos.")
     private String name;

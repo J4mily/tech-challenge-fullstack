@@ -104,10 +104,6 @@ public class CouponServiceImpl implements CouponService {
             couponToUpdate.setValidUntil(couponUpdateDTO.getValidUntil());
         }
 
-        // TODO: Adicionar validação cruzada aqui, similar ao nosso @ValidCouponRequest,
-        // para garantir que as alterações são consistentes (ex: valor vs tipo).
-        // Por simplicidade, vamos deixar para uma futura refatoração.
-
         Coupon updatedCoupon = couponRepository.save(couponToUpdate);
         return mapToCouponResponseDTO(updatedCoupon);
     }

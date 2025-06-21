@@ -1,11 +1,10 @@
-package br.com.senai.desafio.tech_challenge.ServiceTests;
+package br.com.senai.desafio.tech_challenge.service;
 import br.com.senai.desafio.tech_challenge.dto.CouponRequestDTO;
 import br.com.senai.desafio.tech_challenge.dto.CouponResponseDTO;
 import br.com.senai.desafio.tech_challenge.exception.ResourceConflictException;
 import br.com.senai.desafio.tech_challenge.model.Coupon;
 import br.com.senai.desafio.tech_challenge.model.CouponType;
 import br.com.senai.desafio.tech_challenge.repository.CouponRepository;
-import br.com.senai.desafio.tech_challenge.service.CouponServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,7 +20,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

@@ -1,4 +1,4 @@
-package br.com.senai.desafio.tech_challenge.ServiceTests;
+package br.com.senai.desafio.tech_challenge.service;
 import br.com.senai.desafio.tech_challenge.dto.ProductRequestDTO;
 import br.com.senai.desafio.tech_challenge.dto.ProductResponseDTO;
 import br.com.senai.desafio.tech_challenge.exception.ResourceConflictException;
@@ -6,7 +6,6 @@ import br.com.senai.desafio.tech_challenge.exception.ResourceNotFoundException;
 import br.com.senai.desafio.tech_challenge.model.Product;
 import br.com.senai.desafio.tech_challenge.repository.ProductDiscountRepository;
 import br.com.senai.desafio.tech_challenge.repository.ProductRepository;
-import br.com.senai.desafio.tech_challenge.service.ProductServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
