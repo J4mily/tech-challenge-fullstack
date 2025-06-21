@@ -9,10 +9,8 @@ public interface ProductService {
     ProductResponseDTO createProduct(ProductRequestDTO productRequestDTO);
     ProductResponseDTO getProductById(Long id);
     PaginatedResponseDTO<ProductResponseDTO> listProducts(
-            Pageable pageable,
-            String search,
-            BigDecimal minPrice,
-            BigDecimal maxPrice
+            Pageable pageable, String search, BigDecimal minPrice, BigDecimal maxPrice,
+            Boolean hasDiscount, Boolean onlyOutOfStock, Boolean withCouponApplied
     );
     void deleteProduct(Long id);
     ProductResponseDTO restoreProduct(Long id);
