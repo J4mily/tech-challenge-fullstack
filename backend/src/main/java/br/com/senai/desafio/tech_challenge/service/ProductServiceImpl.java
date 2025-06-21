@@ -3,7 +3,13 @@ package br.com.senai.desafio.tech_challenge.service;
 import br.com.senai.desafio.tech_challenge.dto.*;
 import br.com.senai.desafio.tech_challenge.exception.ResourceConflictException;
 import br.com.senai.desafio.tech_challenge.exception.ResourceNotFoundException;
+import br.com.senai.desafio.tech_challenge.exception.UnprocessableEntityException;
+import br.com.senai.desafio.tech_challenge.model.Coupon;
+import br.com.senai.desafio.tech_challenge.model.CouponType;
 import br.com.senai.desafio.tech_challenge.model.Product;
+import br.com.senai.desafio.tech_challenge.model.ProductDiscount;
+import br.com.senai.desafio.tech_challenge.repository.CouponRepository;
+import br.com.senai.desafio.tech_challenge.repository.ProductDiscountRepository;
 import br.com.senai.desafio.tech_challenge.repository.ProductRepository;
 import br.com.senai.desafio.tech_challenge.repository.ProductSpecification;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,7 +29,8 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
-
+    private final CouponRepository couponRepository;
+    private final ProductDiscountRepository productDiscountRepository;
     @Override
     public ProductResponseDTO createProduct(ProductRequestDTO productRequestDTO) {
         String normalizedName = normalizeName(productRequestDTO.getName());
@@ -78,6 +86,10 @@ public class ProductServiceImpl implements ProductService {
 
         return new PaginatedResponseDTO<>(productDTOs, meta);
     }
+    private ProductResponseDTO mapToProductResponseDTO(Product product) {
+        Optional<ProductDiscount> activeDiscount = productDiscountRepository.findByProductIdAndRemovedAtIsNull(product.getId());
+        return mapToProductResponseDTO(product, activeDiscount.orElse(null));
+    }
 
     private String normalizeName(String name) {
         if (name == null) {
@@ -86,19 +98,25 @@ public class ProductServiceImpl implements ProductService {
         return name.trim().replaceAll("\\s+", " ").toLowerCase();
     }
 
-    private ProductResponseDTO mapToProductResponseDTO(Product product) {
+    private ProductResponseDTO mapToProductResponseDTO(Product product, ProductDiscount activeDiscount) {
+        BigDecimal finalPrice = product.getPrice();
+        AppliedDiscountDTO discountDTO = null;
+
+        if (activeDiscount != null) {
+            finalPrice = calculateFinalPrice(product.getPrice(), activeDiscount.getCoupon());
+            discountDTO = AppliedDiscountDTO.builder()
+                    .type(activeDiscount.getCoupon().getType())
+                    .value(activeDiscount.getCoupon().getValue())
+                    .appliedAt(activeDiscount.getAppliedAt())
+                    .build();
+        }
+
         return ProductResponseDTO.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .description(product.getDescription())
-                .stock(product.getStock())
-                .price(product.getPrice())
-                .finalPrice(product.getPrice())
+                .id(product.getId()).name(product.getName()).description(product.getDescription())
+                .stock(product.getStock()).price(product.getPrice()).finalPrice(finalPrice)
                 .isOutOfStock(product.getStock() == 0)
-                .hasCouponApplied(false)
-                .discount(null)
-                .createdAt(product.getCreatedAt())
-                .updatedAt(product.getUpdatedAt())
+                .hasCouponApplied(activeDiscount != null).discount(discountDTO)
+                .createdAt(product.getCreatedAt()).updatedAt(product.getUpdatedAt())
                 .build();
     }
     @Override
@@ -158,5 +176,52 @@ public ProductResponseDTO restoreProduct(Long id) {
         Product updatedProduct = productRepository.save(productToUpdate);
 
         return mapToProductResponseDTO(updatedProduct);
+    }
+    @Override
+    @Transactional
+    public ProductResponseDTO applyCoupon(Long productId, ApplyCouponDTO applyCouponDTO) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Produto com ID " + productId + " não encontrado."));
+
+        productDiscountRepository.findByProductIdAndRemovedAtIsNull(productId).ifPresent(discount -> {
+            throw new ResourceConflictException("Este produto já possui um desconto ativo.");
+        });
+
+        String normalizedCode = applyCouponDTO.getCode().trim().toUpperCase();
+        Coupon coupon = couponRepository.findByCode(normalizedCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Cupom com código '" + applyCouponDTO.getCode() + "' não encontrado."));
+
+        Instant now = Instant.now();
+        if (now.isBefore(coupon.getValidFrom()) || now.isAfter(coupon.getValidUntil())) {
+            throw new UnprocessableEntityException("Este cupom não é válido na data de hoje.");
+        }
+
+        BigDecimal finalPrice = calculateFinalPrice(product.getPrice(), coupon);
+        if (finalPrice.compareTo(new BigDecimal("0.01")) < 0) {
+            throw new UnprocessableEntityException("A aplicação deste cupom resulta num preço final inválido (menor que R$ 0,01).");
+        }
+
+        ProductDiscount newDiscount = ProductDiscount.builder().product(product).coupon(coupon).build();
+        productDiscountRepository.save(newDiscount);
+
+        return mapToProductResponseDTO(product, newDiscount);
+    }
+    @Override
+    @Transactional
+    public void removeDiscount(Long productId) {
+        ProductDiscount activeDiscount = productDiscountRepository.findByProductIdAndRemovedAtIsNull(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Produto com ID " + productId + " não possui um desconto ativo para ser removido."));
+
+        activeDiscount.setRemovedAt(Instant.now());
+        productDiscountRepository.save(activeDiscount);
+    }
+    private BigDecimal calculateFinalPrice(BigDecimal originalPrice, Coupon coupon) {
+        if (coupon.getType() == CouponType.PERCENT) {
+            BigDecimal discountFactor = coupon.getValue().divide(new BigDecimal("100"));
+            BigDecimal discountAmount = originalPrice.multiply(discountFactor);
+            return originalPrice.subtract(discountAmount).setScale(2, BigDecimal.ROUND_HALF_UP);
+        } else {
+            return originalPrice.subtract(coupon.getValue());
+        }
     }
 }

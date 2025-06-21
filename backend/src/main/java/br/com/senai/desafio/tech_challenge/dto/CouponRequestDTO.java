@@ -26,7 +26,6 @@ public class CouponRequestDTO {
     private Boolean oneShot;
 
     @NotNull(message = "A data de início da validade é obrigatória.")
-    @FutureOrPresent(message = "A data de início não pode ser no passado.")
     private Instant validFrom;
 
     @NotNull(message = "A data de fim da validade é obrigatória.")
