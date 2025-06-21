@@ -42,14 +42,17 @@ public class ProductController {
     }
     @GetMapping
     public ResponseEntity<PaginatedResponseDTO<ProductResponseDTO>> listProducts(
-            // A anotação @PageableDefault define os valores padrão para paginação e ordenação.
             @PageableDefault(size = 10, sort = "name") Pageable pageable,
-            // @RequestParam captura os parâmetros da URL. 'required = false' torna-os opcionais.
             @RequestParam(required = false) String search,
             @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) Boolean hasDiscount,
+            @RequestParam(required = false) Boolean onlyOutOfStock,
+            @RequestParam(required = false) Boolean withCouponApplied
     ) {
-        PaginatedResponseDTO<ProductResponseDTO> response = productService.listProducts(pageable, search, minPrice, maxPrice);
+        PaginatedResponseDTO<ProductResponseDTO> response = productService.listProducts(
+                pageable, search, minPrice, maxPrice, hasDiscount, onlyOutOfStock, withCouponApplied
+        );
         return ResponseEntity.ok(response);
     }
     @DeleteMapping("/{id}")

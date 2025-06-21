@@ -11,11 +11,26 @@ import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.Where;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
-@SQLDelete(sql = "UPDATE products SET deleted_at = NOW() WHERE id = ?") // Define o comando para soft delete
-@Where(clause = "deleted_at IS NULL") // Garante que queries sempre filtrem os deletados
+@SQLDelete(sql = "UPDATE products SET deleted_at = NOW() WHERE id = ?")
+@Where(clause = "deleted_at IS NULL")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -38,14 +53,17 @@ public class Product {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @CreationTimestamp // Hibernate preenche com a data/hora de criação
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @UpdateTimestamp // Hibernate preenche com a data/hora da última atualização
+    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductDiscount> discounts;
 }

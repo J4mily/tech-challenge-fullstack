@@ -58,32 +58,27 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public PaginatedResponseDTO<ProductResponseDTO> listProducts(
-            Pageable pageable, String search, BigDecimal minPrice, BigDecimal maxPrice) {
+            Pageable pageable, String search, BigDecimal minPrice, BigDecimal maxPrice,
+            Boolean hasDiscount, Boolean onlyOutOfStock, Boolean withCouponApplied) {
 
-        Specification<Product> spec = Specification.where(null);
-        if (search != null && !search.isEmpty()) {
-            spec = spec.and(ProductSpecification.hasText(search));
-        }
-        if (minPrice != null) {
-            spec = spec.and(ProductSpecification.hasMinPrice(minPrice));
-        }
-        if (maxPrice != null) {
-            spec = spec.and(ProductSpecification.hasMaxPrice(maxPrice));
-        }
+        Specification<Product> spec = Specification.where(ProductSpecification.hasText(search))
+                .and(ProductSpecification.hasMinPrice(minPrice))
+                .and(ProductSpecification.hasMaxPrice(maxPrice))
+                .and(ProductSpecification.hasDiscount(hasDiscount))
+                .and(ProductSpecification.isOutOfStock(onlyOutOfStock))
+                .and(ProductSpecification.withCouponApplied(withCouponApplied));
 
         Page<Product> productPage = productRepository.findAll(spec, pageable);
 
         var productDTOs = productPage.getContent().stream()
                 .map(this::mapToProductResponseDTO)
                 .collect(Collectors.toList());
-
         MetaDTO meta = MetaDTO.builder()
                 .page(productPage.getNumber())
                 .limit(productPage.getSize())
                 .totalItems(productPage.getTotalElements())
                 .totalPages(productPage.getTotalPages())
                 .build();
-
         return new PaginatedResponseDTO<>(productDTOs, meta);
     }
 
