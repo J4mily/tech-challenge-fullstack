@@ -19,5 +19,7 @@ public interface ProductService {
     ProductResponseDTO updateProduct(Long id, ProductUpdateDTO productUpdateDTO);
     ProductResponseDTO applyCoupon(Long productId, ApplyCouponDTO applyCouponDTO);
     void removeDiscount(Long productId);
+    ProductResponseDTO applyPercentageDiscount(Long productId, ApplyPercentageDiscountDTO dto);
+
 
 }

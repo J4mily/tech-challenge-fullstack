@@ -76,10 +76,15 @@ public class ProductController {
             @Valid @RequestBody ApplyCouponDTO applyCouponDTO) {
         return ResponseEntity.ok(productService.applyCoupon(productId, applyCouponDTO));
     }
-
     @DeleteMapping("/{id}/discount")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeDiscount(@PathVariable("id") Long productId) {
         productService.removeDiscount(productId);
+    }
+    @PostMapping("/{id}/discount/percent")
+    public ResponseEntity<ProductResponseDTO> applyPercentageDiscount(
+            @PathVariable("id") Long productId,
+            @Valid @RequestBody ApplyPercentageDiscountDTO dto) {
+        return ResponseEntity.ok(productService.applyPercentageDiscount(productId, dto));
     }
 }

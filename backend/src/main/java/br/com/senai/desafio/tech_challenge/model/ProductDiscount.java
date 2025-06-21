@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
@@ -24,8 +25,15 @@ public class ProductDiscount {
     private Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "coupon_id", nullable = false)
+    @JoinColumn(name = "coupon_id")
     private Coupon coupon;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "discount_type", nullable = false)
+    private CouponType type;
+
+    @Column(name = "discount_value", nullable = false)
+    private BigDecimal value;
 
     @CreationTimestamp
     @Column(name = "applied_at", nullable = false, updatable = false)
@@ -33,4 +41,5 @@ public class ProductDiscount {
 
     @Column(name = "removed_at")
     private Instant removedAt;
+
 }

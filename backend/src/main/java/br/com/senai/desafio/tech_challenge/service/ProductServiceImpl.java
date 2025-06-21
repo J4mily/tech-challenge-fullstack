@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,6 +32,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CouponRepository couponRepository;
     private final ProductDiscountRepository productDiscountRepository;
+
     @Override
     public ProductResponseDTO createProduct(ProductRequestDTO productRequestDTO) {
         String normalizedName = normalizeName(productRequestDTO.getName());
@@ -58,9 +60,7 @@ public class ProductServiceImpl implements ProductService {
     public PaginatedResponseDTO<ProductResponseDTO> listProducts(
             Pageable pageable, String search, BigDecimal minPrice, BigDecimal maxPrice) {
 
-        Specification<Product> spec = Specification.where(null); // Começa com uma especificação "vazia".
-
-        // Adiciona cada filtro condicionalmente.
+        Specification<Product> spec = Specification.where(null);
         if (search != null && !search.isEmpty()) {
             spec = spec.and(ProductSpecification.hasText(search));
         }
@@ -86,64 +86,30 @@ public class ProductServiceImpl implements ProductService {
 
         return new PaginatedResponseDTO<>(productDTOs, meta);
     }
-    private ProductResponseDTO mapToProductResponseDTO(Product product) {
-        Optional<ProductDiscount> activeDiscount = productDiscountRepository.findByProductIdAndRemovedAtIsNull(product.getId());
-        return mapToProductResponseDTO(product, activeDiscount.orElse(null));
-    }
 
-    private String normalizeName(String name) {
-        if (name == null) {
-            return null;
-        }
-        return name.trim().replaceAll("\\s+", " ").toLowerCase();
-    }
-
-    private ProductResponseDTO mapToProductResponseDTO(Product product, ProductDiscount activeDiscount) {
-        BigDecimal finalPrice = product.getPrice();
-        AppliedDiscountDTO discountDTO = null;
-
-        if (activeDiscount != null) {
-            finalPrice = calculateFinalPrice(product.getPrice(), activeDiscount.getCoupon());
-            discountDTO = AppliedDiscountDTO.builder()
-                    .type(activeDiscount.getCoupon().getType())
-                    .value(activeDiscount.getCoupon().getValue())
-                    .appliedAt(activeDiscount.getAppliedAt())
-                    .build();
-        }
-
-        return ProductResponseDTO.builder()
-                .id(product.getId()).name(product.getName()).description(product.getDescription())
-                .stock(product.getStock()).price(product.getPrice()).finalPrice(finalPrice)
-                .isOutOfStock(product.getStock() == 0)
-                .hasCouponApplied(activeDiscount != null).discount(discountDTO)
-                .createdAt(product.getCreatedAt()).updatedAt(product.getUpdatedAt())
-                .build();
-    }
     @Override
     @Transactional
     public void deleteProduct(Long id) {
-        // Primeiro, verificamos se o produto existe e está ativo.
-        // Se não existir, findById já lançará uma exceção ou podemos tratar aqui.
         if (!productRepository.existsById(id)) {
             throw new ResourceNotFoundException("Produto com ID " + id + " não encontrado para exclusão.");
         }
-        // O JpaRepository vai usar a nossa anotação @SQLDelete para fazer o soft-delete.
         productRepository.deleteById(id);
     }
-@Override
-@Transactional
-public ProductResponseDTO restoreProduct(Long id) {
-    productRepository.findInactiveById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Produto com ID " + id + " não está inativo ou não existe."));
 
-    Instant currentTime = Instant.now();
-    int rowsAffected = productRepository.restoreById(id, currentTime);
+    @Override
+    @Transactional
+    public ProductResponseDTO restoreProduct(Long id) {
+        productRepository.findInactiveById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Produto com ID " + id + " não está inativo ou não existe."));
 
-    if (rowsAffected == 0) {
-        throw new ResourceNotFoundException("Falha ao restaurar o produto com ID " + id + ". Nenhuma linha foi afetada.");
+        Instant currentTime = Instant.now();
+        int rowsAffected = productRepository.restoreById(id, currentTime);
+
+        if (rowsAffected == 0) {
+            throw new ResourceNotFoundException("Falha ao restaurar o produto com ID " + id + ". Nenhuma linha foi afetada.");
+        }
+        return getProductById(id);
     }
-    return getProductById(id);
-}
 
     @Override
     @Transactional
@@ -174,9 +140,9 @@ public ProductResponseDTO restoreProduct(Long id) {
         }
 
         Product updatedProduct = productRepository.save(productToUpdate);
-
         return mapToProductResponseDTO(updatedProduct);
     }
+
     @Override
     @Transactional
     public ProductResponseDTO applyCoupon(Long productId, ApplyCouponDTO applyCouponDTO) {
@@ -196,16 +162,46 @@ public ProductResponseDTO restoreProduct(Long id) {
             throw new UnprocessableEntityException("Este cupom não é válido na data de hoje.");
         }
 
-        BigDecimal finalPrice = calculateFinalPrice(product.getPrice(), coupon);
-        if (finalPrice.compareTo(new BigDecimal("0.01")) < 0) {
+        ProductDiscount newDiscount = ProductDiscount.builder()
+                .product(product)
+                .coupon(coupon)
+                .type(coupon.getType())
+                .value(coupon.getValue())
+                .build();
+
+        if (calculateFinalPrice(product.getPrice(), newDiscount).compareTo(new BigDecimal("0.01")) < 0) {
             throw new UnprocessableEntityException("A aplicação deste cupom resulta num preço final inválido (menor que R$ 0,01).");
         }
 
-        ProductDiscount newDiscount = ProductDiscount.builder().product(product).coupon(coupon).build();
         productDiscountRepository.save(newDiscount);
-
         return mapToProductResponseDTO(product, newDiscount);
     }
+
+    @Override
+    @Transactional
+    public ProductResponseDTO applyPercentageDiscount(Long productId, ApplyPercentageDiscountDTO dto) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Produto com ID " + productId + " não encontrado."));
+
+        productDiscountRepository.findByProductIdAndRemovedAtIsNull(productId).ifPresent(discount -> {
+            throw new ResourceConflictException("Este produto já possui um desconto ativo.");
+        });
+
+        ProductDiscount newDiscount = ProductDiscount.builder()
+                .product(product)
+                .type(CouponType.PERCENT)
+                .value(dto.getPercentage())
+                .coupon(null)
+                .build();
+
+        if (calculateFinalPrice(product.getPrice(), newDiscount).compareTo(new BigDecimal("0.01")) < 0) {
+            throw new UnprocessableEntityException("A aplicação deste desconto resulta num preço final inválido (menor que R$ 0,01).");
+        }
+
+        productDiscountRepository.save(newDiscount);
+        return mapToProductResponseDTO(product, newDiscount);
+    }
+
     @Override
     @Transactional
     public void removeDiscount(Long productId) {
@@ -215,13 +211,49 @@ public ProductResponseDTO restoreProduct(Long id) {
         activeDiscount.setRemovedAt(Instant.now());
         productDiscountRepository.save(activeDiscount);
     }
-    private BigDecimal calculateFinalPrice(BigDecimal originalPrice, Coupon coupon) {
-        if (coupon.getType() == CouponType.PERCENT) {
-            BigDecimal discountFactor = coupon.getValue().divide(new BigDecimal("100"));
+
+    private BigDecimal calculateFinalPrice(BigDecimal originalPrice, ProductDiscount discount) {
+        if (discount.getType() == CouponType.PERCENT) {
+            BigDecimal discountFactor = discount.getValue().divide(new BigDecimal("100"));
             BigDecimal discountAmount = originalPrice.multiply(discountFactor);
-            return originalPrice.subtract(discountAmount).setScale(2, BigDecimal.ROUND_HALF_UP);
+            return originalPrice.subtract(discountAmount).setScale(2, RoundingMode.HALF_UP);
         } else {
-            return originalPrice.subtract(coupon.getValue());
+            return originalPrice.subtract(discount.getValue());
         }
+    }
+
+    private ProductResponseDTO mapToProductResponseDTO(Product product, ProductDiscount activeDiscount) {
+        BigDecimal finalPrice = product.getPrice();
+        AppliedDiscountDTO discountDTO = null;
+
+        if (activeDiscount != null) {
+            finalPrice = calculateFinalPrice(product.getPrice(), activeDiscount);
+            discountDTO = AppliedDiscountDTO.builder()
+                    .type(activeDiscount.getType())
+                    .value(activeDiscount.getValue())
+                    .appliedAt(activeDiscount.getAppliedAt())
+                    .build();
+        }
+
+        return ProductResponseDTO.builder()
+                .id(product.getId()).name(product.getName()).description(product.getDescription())
+                .stock(product.getStock()).price(product.getPrice()).finalPrice(finalPrice)
+                .isOutOfStock(product.getStock() == 0)
+                .hasCouponApplied(activeDiscount != null && activeDiscount.getCoupon() != null)
+                .discount(discountDTO)
+                .createdAt(product.getCreatedAt()).updatedAt(product.getUpdatedAt())
+                .build();
+    }
+
+    private ProductResponseDTO mapToProductResponseDTO(Product product) {
+        Optional<ProductDiscount> activeDiscount = productDiscountRepository.findByProductIdAndRemovedAtIsNull(product.getId());
+        return mapToProductResponseDTO(product, activeDiscount.orElse(null));
+    }
+
+    private String normalizeName(String name) {
+        if (name == null) {
+            return null;
+        }
+        return name.trim().replaceAll("\\s+", " ").toLowerCase();
     }
 }
