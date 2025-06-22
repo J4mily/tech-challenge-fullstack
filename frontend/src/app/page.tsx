@@ -9,7 +9,15 @@ import Pagination from '@/components/Pagination';
 import Modal from '@/components/Modal'; 
 import ProductForm from '@/components/ProductForm';
 import { Product, Meta } from '@/types';
-import { getProducts, createProduct, ProductCreationData } from '@/services/api';
+import { 
+  getProducts, 
+  createProduct, 
+  updateProduct, 
+  deleteProduct, 
+  getProductById, 
+  ProductCreationData, 
+  ProductUpdateData 
+} from '@/services/api';
 import { AxiosError } from 'axios';
 
 export default function HomePage() {
@@ -19,13 +27,10 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const [currentPage, setCurrentPage] = useState<number>(0);
-  const [appliedFilters, setAppliedFilters] = useState({
-    search: '',
-    minPrice: '',
-    maxPrice: '',
-  });
+  const [appliedFilters, setAppliedFilters] = useState({ search: '', minPrice: '', maxPrice: '' });
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
@@ -59,23 +64,60 @@ export default function HomePage() {
     setAppliedFilters(prevFilters => ({ ...prevFilters, ...newFilters }));
   }, []);
 
-  const handleSaveProduct = async (productData: ProductCreationData) => {
+  // --- FUNÇÃO PARA LIDAR COM O CLIQUE NO BOTÃO EDITAR ---
+  const handleEdit = async (productId: number) => {
     try {
-        await createProduct(productData);
-        setIsModalOpen(false);
-        await fetchProducts(); // Usamos await para garantir que a lista é atualizada
+        const productToEdit = await getProductById(productId);
+        setEditingProduct(productToEdit);
+        setIsModalOpen(true);
+    } catch (error) {
+        console.error("Falha ao buscar produto para edição:", error);
+    }
+  };
+
+  // --- FUNÇÃO PARA LIDAR COM A DELEÇÃO ---
+  const handleDelete = async (productId: number) => {
+    if (window.confirm("Tem a certeza que deseja apagar este produto?")) {
+        try {
+            await deleteProduct(productId);
+            await fetchProducts(); // Atualiza a lista após apagar
+        } catch (error) {
+            console.error("Falha ao apagar produto:", error);
+        }
+    }
+  };
+
+  // --- FUNÇÃO DE "ORQUESTRA" PARA SALVAR (CRIAR OU ATUALIZAR) ---
+  const handleSaveProduct = async (formData: ProductCreationData | ProductUpdateData) => {
+    try {
+        if (editingProduct) {
+            await updateProduct(editingProduct.id, formData);
+        } else {
+            await createProduct(formData as ProductCreationData);
+        }
+        closeModalAndRefresh();
     } catch (error: unknown) {
-        console.error("Erro ao criar produto:", error);
-        
+        console.error("Erro ao salvar produto:", error);
         if (error instanceof AxiosError && error.response) {
             throw new Error(error.response.data.message || "Erro do servidor.");
         } else if (error instanceof Error) {
             throw new Error(error.message);
         } else {
-            throw new Error("Erro desconhecido ao criar produto.");
+            throw new Error("Erro desconhecido ao salvar produto.");
         }
     }
   };
+  
+  const closeModalAndRefresh = () => {
+    setIsModalOpen(false);
+    setEditingProduct(null);
+    fetchProducts();
+  }
+  
+  const handleCreateClick = () => {
+    setEditingProduct(null); // Garante que não há dados de edição
+    setIsModalOpen(true);
+  }
 
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900">
@@ -84,12 +126,17 @@ export default function HomePage() {
         <Header />
         <main className="flex-1 overflow-y-auto p-8">
           <h2 className="text-3xl font-bold mb-8">Produtos</h2>
-          <ProductControls onCreate={() => setIsModalOpen(true)} onFilterChange={handleFilterChange} />
+          <ProductControls onCreate={handleCreateClick} onFilterChange={handleFilterChange} />
+          
+          {/* Passamos as novas funções para a nossa tabela */}
           <ProductTable 
             products={products} 
             isLoading={isLoading} 
-            error={error} 
+            error={error}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
+
           <Pagination 
             meta={meta}
             onPageChange={setCurrentPage}
@@ -97,8 +144,12 @@ export default function HomePage() {
         </main>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Adicionar Novo Produto">
-        <ProductForm onSave={handleSaveProduct} onCancel={() => setIsModalOpen(false)} />
+      <Modal isOpen={isModalOpen} onClose={closeModalAndRefresh} title={editingProduct ? "Editar Produto" : "Adicionar Novo Produto"}>
+        <ProductForm 
+            onSave={handleSaveProduct} 
+            onCancel={closeModalAndRefresh}
+            initialData={editingProduct} 
+        />
       </Modal>
     </div>
   );
