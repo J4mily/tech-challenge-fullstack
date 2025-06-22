@@ -5,24 +5,22 @@ import { PlusCircle, Search } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 
 interface ProductControlsProps {
+  onCreate: () => void;
   onFilterChange: (filters: { search?: string; minPrice?: string; maxPrice?: string; }) => void;
 }
 
-export default function ProductControls({ onFilterChange }: ProductControlsProps) {
+export default function ProductControls({ onCreate, onFilterChange }: ProductControlsProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  // Gatilho para a busca "ao vivo"
   useEffect(() => {
-    // Só envia a atualização se o termo de busca debounced mudar
     onFilterChange({ search: debouncedSearchTerm });
   }, [debouncedSearchTerm, onFilterChange]);
 
   const handleFilterClick = () => {
-    // Envia apenas os filtros de preço ao clicar no botão
     onFilterChange({ 
       minPrice: minPrice, 
       maxPrice: maxPrice 
@@ -31,7 +29,6 @@ export default function ProductControls({ onFilterChange }: ProductControlsProps
   
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex items-center space-x-4">
-      {/* Grupo de Filtro de Preço */}
       <div className="flex items-center space-x-2">
           <input 
               type="number" 
@@ -54,7 +51,6 @@ export default function ProductControls({ onFilterChange }: ProductControlsProps
           </button>
       </div>
       
-      {/* Campo de Busca (ocupa o espaço restante) */}
       <div className="flex-1">
           <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -68,8 +64,9 @@ export default function ProductControls({ onFilterChange }: ProductControlsProps
           </div>
       </div>
       
-      {/* Botão de Criar Produto */}
-      <button className="flex items-center px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-md hover:bg-slate-700">
+      <button 
+        onClick={onCreate}
+        className="flex items-center px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-md hover:bg-slate-700">
           <PlusCircle className="h-5 w-5 mr-2" />
           Criar Produto
       </button>

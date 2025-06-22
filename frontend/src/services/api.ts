@@ -16,3 +16,15 @@ export const getProducts = async (params: URLSearchParams): Promise<PaginatedPro
   const response = await api.get(`/products`, { params });
   return response.data;
 };
+
+export type ProductCreationData = {
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+}
+
+export const createProduct = async (productData: ProductCreationData): Promise<Product> => {
+    const response = await api.post('/products', productData);
+    return response.data;
+}
