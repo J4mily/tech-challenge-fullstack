@@ -18,7 +18,6 @@ export type ProductCreationData = {
     price: number;
     stock: number;
 }
-
 // O tipo para atualização é parcial, pois podemos enviar apenas alguns campos.
 export type ProductUpdateData = Partial<ProductCreationData>;
 
@@ -44,4 +43,18 @@ export const updateProduct = async (id: number, productData: ProductUpdateData):
 
 export const deleteProduct = async (id: number): Promise<void> => {
     await api.delete(`/products/${id}`);
+};
+
+export const applyCouponDiscount = async (productId: number, code: string): Promise<Product> => {
+    const response = await api.post(`/products/${productId}/discount/coupon`, { code });
+    return response.data;
+};
+
+export const applyPercentageDiscount = async (productId: number, percentage: number): Promise<Product> => {
+    const response = await api.post(`/products/${productId}/discount/percent`, { percentage });
+    return response.data;
+};
+
+export const removeDiscount = async (productId: number): Promise<void> => {
+    await api.delete(`/products/${productId}/discount`);
 };

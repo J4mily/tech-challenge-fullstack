@@ -2,11 +2,12 @@
 
 import { X } from 'lucide-react';
 import React from 'react';
+import { ReactNode } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
+  title: ReactNode;
   children: React.ReactNode;
 }
 

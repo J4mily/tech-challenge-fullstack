@@ -3,16 +3,16 @@
 import { Pencil, Trash2, DollarSign } from 'lucide-react';
 import { Product } from '@/types';
 
-// Atualizamos a interface para receber as novas funções
 interface ProductTableProps {
   products: Product[];
   isLoading: boolean;
   error: string | null;
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
+  onApplyDiscount: (product: Product) => void; 
 }
 
-export default function ProductTable({ products, isLoading, error, onEdit, onDelete }: ProductTableProps) {
+export default function ProductTable({ products, isLoading, error, onEdit, onDelete, onApplyDiscount }: ProductTableProps) {
     
   if (isLoading) { return <div className="text-center py-10">A carregar produtos...</div>; }
   if (error) { return <div className="text-center py-10 text-red-500">{error}</div>; }
@@ -54,11 +54,10 @@ export default function ProductTable({ products, isLoading, error, onEdit, onDel
               </td>
               <td className="p-4">
                 <div className="flex space-x-4">
-                    {/* Adicionamos os eventos onClick aos nossos botões */}
                     <button onClick={() => onEdit(product.id)} title="Editar">
                         <Pencil className="h-5 w-5 text-slate-500 hover:text-amber-600 cursor-pointer" />
                     </button>
-                    <button title="Aplicar Desconto">
+                    <button onClick={() => onApplyDiscount(product)} title="Aplicar Desconto">
                         <DollarSign className="h-5 w-5 text-slate-500 hover:text-green-600 cursor-pointer" />
                     </button>
                     <button onClick={() => onDelete(product.id)} title="Apagar">

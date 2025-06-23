@@ -6,7 +6,9 @@ import ProductControls from "@/components/ProductControls";
 import ProductTable from "@/components/ProductTable";
 import Sidebar from "@/components/Sidebar";
 import Pagination from "@/components/Pagination";
+import Modal from "@/components/Modal";
 import ProductForm from "@/components/ProductForm";
+import DiscountForm from "@/components/DiscountForm";
 import { Product, Meta } from "@/types";
 import {
   getProducts,
@@ -16,18 +18,26 @@ import {
   getProductById,
   ProductCreationData,
   ProductUpdateData,
+  applyCouponDiscount,
+  applyPercentageDiscount,
+  removeDiscount,
 } from "@/services/api";
 import { AxiosError } from "axios";
-import Image from 'next/image';
-
+import { FilePenLine, ShoppingBag, Tag } from "lucide-react";
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [meta, setMeta] = useState<Meta | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
   const [view, setView] = useState<"list" | "form">("list");
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+  const [productForDiscount, setProductForDiscount] = useState<Product | null>(
+    null
+  );
 
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [appliedFilters, setAppliedFilters] = useState({
@@ -128,25 +138,45 @@ export default function HomePage() {
     setView("list");
   };
 
-  // Função para renderizar o conteúdo principal com base na vista atual
+  const handleOpenDiscountModal = (product: Product) => {
+    setProductForDiscount(product);
+    setIsDiscountModalOpen(true);
+  };
+
+  const handleApplyCoupon = async (code: string) => {
+    if (!productForDiscount) return;
+    await applyCouponDiscount(productForDiscount.id, code);
+    closeDiscountModalAndRefresh();
+  };
+
+  const handleApplyPercentage = async (percentage: number) => {
+    if (!productForDiscount) return;
+    await applyPercentageDiscount(productForDiscount.id, percentage);
+    closeDiscountModalAndRefresh();
+  };
+
+  const handleRemoveDiscount = async () => {
+    if (!productForDiscount) return;
+    await removeDiscount(productForDiscount.id);
+    closeDiscountModalAndRefresh();
+  };
+
+  const closeDiscountModalAndRefresh = () => {
+    setIsDiscountModalOpen(false);
+    setProductForDiscount(null);
+    fetchProducts();
+  };
+
   const renderMainContent = () => {
     if (view === "form") {
       return (
         <>
           <div className="flex items-center gap-3 mb-8">
-            <Image
-              src="/createFile.svg"
-              alt="Ícone de criar arquivo"
-              width={40}
-              height={40}
-              className="w-10 h-10"
-            />
-
+            <FilePenLine className="h-8 w-8 text-slate-500" />
             <h2 className="text-3xl font-bold">
               {editingProduct ? "Editar Produto" : "Cadastro de Produto"}
             </h2>
           </div>
-
           <ProductForm
             onSave={handleSaveProduct}
             onCancel={handleCancelForm}
@@ -160,13 +190,7 @@ export default function HomePage() {
     return (
       <>
         <div className="flex items-center gap-3 mb-8">
-          <Image
-            src="/productFile.svg"
-            alt="Ícone produtos"
-            width={40}
-            height={40}
-            className="h-10 w-10"
-          />
+          <ShoppingBag className="h-8 w-8 text-slate-500" />
           <h2 className="text-3xl font-bold">Produtos</h2>
         </div>
         <ProductControls
@@ -179,6 +203,7 @@ export default function HomePage() {
           error={error}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onApplyDiscount={handleOpenDiscountModal}
         />
         <Pagination meta={meta} onPageChange={setCurrentPage} />
       </>
@@ -194,6 +219,26 @@ export default function HomePage() {
           {renderMainContent()}
         </main>
       </div>
+      <Modal
+        isOpen={isDiscountModalOpen}
+        onClose={closeDiscountModalAndRefresh}
+        title={
+          <div className="flex items-center text-lg font-semibold">
+            <Tag className="h-6 w-6 mr-2" />
+            Aplicar Desconto
+          </div>
+        }
+      >
+        {productForDiscount && (
+          <DiscountForm
+            onApplyCoupon={handleApplyCoupon}
+            onApplyPercentage={handleApplyPercentage}
+            onRemoveDiscount={handleRemoveDiscount}
+            onCancel={closeDiscountModalAndRefresh}
+            hasActiveDiscount={!!productForDiscount.discount}
+          />
+        )}
+      </Modal>
     </div>
   );
 }
