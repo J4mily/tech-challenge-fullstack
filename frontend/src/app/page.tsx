@@ -223,11 +223,12 @@ export default function HomePage() {
         isOpen={isDiscountModalOpen}
         onClose={closeDiscountModalAndRefresh}
         title={
-          <div className="flex items-center text-lg font-semibold">
-            <Tag className="h-6 w-6 mr-2" />
+          <div className="flex items-center">
+            <Tag className="h-5 w-5 mr-2" />
             Aplicar Desconto
           </div>
         }
+        description="Escolha como aplicar o desconto ao produto"
       >
         {productForDiscount && (
           <DiscountForm

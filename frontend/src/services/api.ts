@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Product, Meta } from '@/types';
+import { Product, Meta, Coupons } from '@/types';
 
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
@@ -43,6 +43,11 @@ export const updateProduct = async (id: number, productData: ProductUpdateData):
 
 export const deleteProduct = async (id: number): Promise<void> => {
     await api.delete(`/products/${id}`);
+};
+
+export const getCoupons = async (): Promise<Coupons[]> => {
+  const response = await api.get(`/coupons`, { });
+  return response.data;
 };
 
 export const applyCouponDiscount = async (productId: number, code: string): Promise<Product> => {
