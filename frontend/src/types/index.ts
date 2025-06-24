@@ -1,5 +1,4 @@
 export interface Product {
-  couponCode: string | null | undefined;
   id: number;
   name: string;
   description: string;
@@ -11,7 +10,8 @@ export interface Product {
     type: string;
     value: number;
   } | null;
-  hasCouponApplied: boolean;
+  has_coupon_applied: boolean;
+  coupon_code: string | null | undefined;
 }
 
 export interface Meta {

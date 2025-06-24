@@ -77,7 +77,7 @@ class ProductServiceImplTest {
         when(productRepository.save(any(Product.class))).thenReturn(product);
 
         // Dizemos ao mock do desconto para retornar vazio, pois é um produto novo.
-        when(productDiscountRepository.findByProductIdAndRemovedAtIsNull(any())).thenReturn(Optional.empty());
+        when(productDiscountRepository.findActiveDiscountWithCouponByProductId(any())).thenReturn(Optional.empty());
 
         // Act (Agir / Executar o método a ser testado)
         ProductResponseDTO result = productService.createProduct(productRequestDTO);
@@ -108,7 +108,7 @@ class ProductServiceImplTest {
     void getProductById_shouldReturnProduct_whenIdExists() {
         // Arrange
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productDiscountRepository.findByProductIdAndRemovedAtIsNull(1L)).thenReturn(Optional.empty());
+        when(productDiscountRepository.findActiveDiscountWithCouponByProductId(1L)).thenReturn(Optional.empty());
 
         // Act
         ProductResponseDTO result = productService.getProductById(1L);

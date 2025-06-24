@@ -127,7 +127,7 @@ export default function HomePage() {
             onRemoveDiscount={handleRemoveDiscount}
             onCancel={closeDiscountModal}
             activeDiscount={productForDiscount.discount}
-            appliedCouponCode={productForDiscount.couponCode}
+            appliedCouponCode={productForDiscount.coupon_code}
           />
         )}
       </Modal>
