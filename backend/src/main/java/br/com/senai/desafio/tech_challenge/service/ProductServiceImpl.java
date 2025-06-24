@@ -13,6 +13,7 @@ import br.com.senai.desafio.tech_challenge.repository.ProductDiscountRepository;
 import br.com.senai.desafio.tech_challenge.repository.ProductRepository;
 import br.com.senai.desafio.tech_challenge.repository.ProductSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -36,18 +37,27 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponseDTO createProduct(ProductRequestDTO productRequestDTO) {
         String normalizedName = normalizeName(productRequestDTO.getName());
+
         productRepository.findByName(normalizedName).ifPresent(product -> {
             throw new ResourceConflictException("Já existe um produto com o nome '" + productRequestDTO.getName() + "'.");
         });
+
         Product newProduct = Product.builder()
                 .name(normalizedName)
                 .description(productRequestDTO.getDescription())
                 .price(productRequestDTO.getPrice())
                 .stock(productRequestDTO.getStock())
                 .build();
-        Product savedProduct = productRepository.save(newProduct);
-        return mapToProductResponseDTO(savedProduct);
+
+        try {
+            Product savedProduct = productRepository.save(newProduct);
+            return mapToProductResponseDTO(savedProduct);
+
+        } catch (DataIntegrityViolationException e) {
+            throw new ResourceConflictException("Já existe um produto com o nome '" + productRequestDTO.getName() + "'.");
+        }
     }
+
 
     @Override
     public ProductResponseDTO getProductById(Long id) {

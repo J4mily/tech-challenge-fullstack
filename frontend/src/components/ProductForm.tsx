@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { ProductCreationData, ProductUpdateData } from "@/hooks/api";
+import CancelButton from "./CancelButton";
 
 interface ProductFormProps {
   onSave: (
@@ -157,13 +158,7 @@ export default function ProductForm({
         </div>
         {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
         <div className="mt-8 flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="bg-white py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
-            Cancelar
-          </button>
+          <CancelButton onClick={onCancel}></CancelButton>
           <button
             type="submit"
             disabled={isSubmitting}

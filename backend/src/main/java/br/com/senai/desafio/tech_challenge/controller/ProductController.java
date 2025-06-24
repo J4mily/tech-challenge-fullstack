@@ -1,6 +1,7 @@
 package br.com.senai.desafio.tech_challenge.controller;
 
 import br.com.senai.desafio.tech_challenge.dto.*;
+import br.com.senai.desafio.tech_challenge.exception.ResourceConflictException;
 import br.com.senai.desafio.tech_challenge.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,8 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/products") // URL base para todos os endpoints deste controller
@@ -22,18 +25,27 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    public ResponseEntity<ProductResponseDTO> createProduct(@Valid @RequestBody ProductRequestDTO productRequestDTO) {
-        ProductResponseDTO createdProduct = productService.createProduct(productRequestDTO);
+    public ResponseEntity<?> createProduct(@Valid @RequestBody ProductRequestDTO productRequestDTO) {
+        try {
+            ProductResponseDTO createdProduct = productService.createProduct(productRequestDTO);
 
-        // Cria a URL do recurso recém-criado para retornar no cabeçalho 'Location'.
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(createdProduct.getId())
-                .toUri();
+            URI location = ServletUriComponentsBuilder
+                    .fromCurrentRequest()
+                    .path("/{id}")
+                    .buildAndExpand(createdProduct.getId())
+                    .toUri();
 
-        // Retorna 201 Created com a URL e o corpo do objeto criado.
-        return ResponseEntity.created(location).body(createdProduct);
+            return ResponseEntity.created(location).body(createdProduct);
+
+        } catch (ResourceConflictException ex) {
+            Map<String, Object> errorBody = new HashMap<>();
+            errorBody.put("timestamp", System.currentTimeMillis());
+            errorBody.put("status", HttpStatus.CONFLICT.value());
+            errorBody.put("error", "Conflito de Recurso");
+            errorBody.put("message", ex.getMessage());
+
+            return new ResponseEntity<>(errorBody, HttpStatus.CONFLICT);
+        }
     }
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable Long id) {
@@ -56,7 +68,7 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT) // Retorna 204 No Content em caso de sucesso
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
     }
