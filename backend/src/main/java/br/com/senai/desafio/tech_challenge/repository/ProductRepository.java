@@ -14,12 +14,10 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
     // Método para buscar um produto pelo nome normalizado.
-    // A lógica de normalização ficará no serviço.
     Optional<Product> findByName(String name);
 
     // Este método usa uma query SQL nativa para encontrar um produto pelo ID,
     // especificamente entre os que foram inativados (deleted_at IS NOT NULL).
-    // Isto é necessário para a função de "restaurar".
     @Query(value = "SELECT * FROM products WHERE id = :id AND deleted_at IS NOT NULL", nativeQuery = true)
     Optional<Product> findInactiveById(Long id);
     @Modifying(clearAutomatically = true)

@@ -5,6 +5,7 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 
@@ -12,8 +13,8 @@ import java.math.BigDecimal;
 public class ProductSpecification {
 
     public static Specification<Product> hasText(String text) {
-        if (text == null || text.isEmpty()) {
-            return null;
+        if (!StringUtils.hasText(text)) {
+            return Specification.allOf();
         }
         String lowerCaseText = "%" + text.toLowerCase() + "%";
         return (root, query, cb) ->
@@ -61,6 +62,7 @@ public class ProductSpecification {
 
     public static Specification<Product> withCouponApplied(Boolean withCouponApplied) {
         if (withCouponApplied == null) return null;
+
 
         return (root, query, cb) -> {
             Join<Product, ProductDiscount> discountJoin = root.join("discounts", JoinType.LEFT);
