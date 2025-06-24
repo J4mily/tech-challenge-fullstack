@@ -68,7 +68,9 @@ export default function HomePage() {
     setView("list");
   };
 
-  const handleSaveForm = async (formData: ProductCreationData | ProductUpdateData) => {
+  const handleSaveForm = async (
+    formData: ProductCreationData | ProductUpdateData
+  ) => {
     await saveProduct(formData, editingProduct ? editingProduct.id : null);
     setView("list");
     setEditingProduct(null);
@@ -112,7 +114,11 @@ export default function HomePage() {
             Aplicar Desconto
           </div>
         }
-        description="Escolha como aplicar o desconto ao produto"
+        description={
+          productForDiscount?.discount
+            ? null
+            : "Escolha como aplicar o desconto ao produto"
+        }
       >
         {productForDiscount && (
           <DiscountForm
@@ -120,7 +126,8 @@ export default function HomePage() {
             onApplyPercentage={handleApplyPercentage}
             onRemoveDiscount={handleRemoveDiscount}
             onCancel={closeDiscountModal}
-            hasActiveDiscount={!!productForDiscount.discount}
+            activeDiscount={productForDiscount.discount}
+            appliedCouponCode={productForDiscount.couponCode}
           />
         )}
       </Modal>

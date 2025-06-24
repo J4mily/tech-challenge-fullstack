@@ -9,7 +9,11 @@ interface DiscountFormProps {
   onApplyPercentage: (percentage: number) => Promise<void>;
   onRemoveDiscount: () => Promise<void>;
   onCancel: () => void;
-  hasActiveDiscount: boolean;
+  activeDiscount: {
+    value: number;
+    type: string;
+  } | null;
+  appliedCouponCode?: string | null;
 }
 
 export default function DiscountForm({
@@ -17,7 +21,8 @@ export default function DiscountForm({
   onApplyPercentage,
   onRemoveDiscount,
   onCancel,
-  hasActiveDiscount,
+  activeDiscount,
+  appliedCouponCode,
 }: DiscountFormProps) {
   const [activeTab, setActiveTab] = useState<"coupon" | "percent">("coupon");
   const [couponCode, setCouponCode] = useState("");
@@ -75,13 +80,17 @@ export default function DiscountForm({
     }
   };
 
-  // Se o produto já tem um desconto, mostramos a opção de remover.
-  if (hasActiveDiscount) {
+  // Se o produto já tem um desconto, mostramos os detalhes e a opção de remover.
+  if (activeDiscount) {
+    const discountMessage = appliedCouponCode
+      ? `Este produto tem o cupom "${appliedCouponCode}" aplicado, concedendo ${activeDiscount.value}% de desconto.`
+      : `Este produto já tem um desconto de ${activeDiscount.value}% aplicado.`;
+
     return (
       <div>
-        <p className="text-sm text-slate-600 mb-4">
-          Este produto já tem um desconto ativo. Deseja removê-lo?
-        </p>
+        <p className="text-sm text-slate-600 mb-2">{discountMessage}</p>
+        <p className="text-sm text-slate-600 mb-4">Deseja removê-lo?</p>
+
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
         <div className="flex justify-end space-x-3 mt-6">
           <button
@@ -131,7 +140,7 @@ export default function DiscountForm({
           Percentual Direto
         </button>
       </div>
-<hr className="my-6 mx-auto w-3.9/4 border-t border-slate-200" />
+      <hr className="my-6 mx-auto w-3.9/4 border-t border-slate-200" />
 
       {activeTab === "coupon" && (
         <form onSubmit={handleCouponSubmit}>

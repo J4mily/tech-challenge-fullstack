@@ -27,11 +27,11 @@ export default function Modal({
           <h2 className="flex items-center text-lg font-semibold text-slate-900">
             {title}
           </h2>
-          <p className="text-sm text-slate-500 mt-1">{description}</p>
+          {description && (
+            <p className="text-sm text-slate-500 mt-1">{description}</p>
+          )}
         </header>
-
         <div className="px-6 pt-4 pb-6">{children}</div>
-        
       </div>
     </div>
   );
