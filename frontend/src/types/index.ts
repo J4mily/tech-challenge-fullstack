@@ -1,4 +1,5 @@
 export interface Product {
+  couponCode: string | null | undefined;
   id: number;
   name: string;
   description: string;
@@ -19,3 +20,17 @@ export interface Meta {
   totalItems: number;
   totalPages: number;
 }
+
+export interface Coupons {
+    id: number;
+    code: string;
+    type: string;
+    value: number;
+    one_shot: boolean;
+    valid_from: Date;
+    valid_until: Date;
+    created_at: Date;
+}
+export type ProductCreationData = Pick<Product, 'name' | 'description' | 'price' | 'stock'>;
+
+export type ProductUpdateData = Partial<ProductCreationData>;

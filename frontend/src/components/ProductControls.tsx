@@ -5,16 +5,6 @@ import { PlusCircle, Search, RotateCw } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 
 interface ProductControlsProps {
-<<<<<<< Updated upstream
-  onFilterChange: (filters: { search?: string; minPrice?: string; maxPrice?: string; }) => void;
-}
-
-export default function ProductControls({ onFilterChange }: ProductControlsProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  
-=======
   onCreate: () => void;
   onFilterChange: (filters: {
     search?: string;
@@ -32,27 +22,17 @@ export default function ProductControls({
   const [maxPrice, setMaxPrice] = useState("");
   const [isPriceFiltered, setIsPriceFiltered] = useState(false);
 
->>>>>>> Stashed changes
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  // Gatilho para a busca "ao vivo"
   useEffect(() => {
-    // Só envia a atualização se o termo de busca debounced mudar
     onFilterChange({ search: debouncedSearchTerm });
   }, [debouncedSearchTerm, onFilterChange]);
 
   const handleFilterClick = () => {
-<<<<<<< Updated upstream
-    // Envia apenas os filtros de preço ao clicar no botão
-    onFilterChange({ 
-      minPrice: minPrice, 
-      maxPrice: maxPrice 
-=======
     onFilterChange({
       search: debouncedSearchTerm,
       minPrice: minPrice,
       maxPrice: maxPrice,
->>>>>>> Stashed changes
     });
     if (minPrice || maxPrice) {
       setIsPriceFiltered(true);
@@ -70,7 +50,6 @@ export default function ProductControls({
     setIsPriceFiltered(false);
   };
 
-  //garante que apenas números positivos ou um campo vazio sejam aceitos.
   const handlePriceChange = (
     value: string,
     setter: (value: string) => void
@@ -82,7 +61,6 @@ export default function ProductControls({
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex items-center space-x-4">
-      {/* Grupo de Filtro de Preço */}
       <div className="flex items-center space-x-2">
         <input
           type="number"
@@ -118,12 +96,7 @@ export default function ProductControls({
           </button>
         )}
       </div>
-<<<<<<< Updated upstream
-      
-      {/* Campo de Busca (ocupa o espaço restante) */}
-=======
 
->>>>>>> Stashed changes
       <div className="flex-1">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
@@ -136,13 +109,6 @@ export default function ProductControls({
           />
         </div>
       </div>
-<<<<<<< Updated upstream
-      
-      {/* Botão de Criar Produto */}
-      <button className="flex items-center px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-md hover:bg-slate-700">
-          <PlusCircle className="h-5 w-5 mr-2" />
-          Criar Produto
-=======
 
       <button
         onClick={onCreate}
@@ -150,7 +116,6 @@ export default function ProductControls({
       >
         <PlusCircle className="h-5 w-5 mr-2" />
         Criar Produto
->>>>>>> Stashed changes
       </button>
     </div>
   );
