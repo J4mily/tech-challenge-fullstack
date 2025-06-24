@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ProductCreationData, ProductUpdateData } from "@/services/api";
+import { ProductCreationData, ProductUpdateData } from "@/hooks/api";
 
 interface ProductFormProps {
   onSave: (
