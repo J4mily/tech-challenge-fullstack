@@ -91,13 +91,10 @@ class ProductServiceImplTest {
     @Test
     @DisplayName("Deve lançar uma exceção ao tentar criar um produto com nome que já existe")
     void createProduct_shouldThrowException_whenNameExists() {
-        // Arrange (Arrumar o cenário)
-        // Dizemos ao nosso mock: "Quando o método findByName for chamado, finja que
-        // você encontrou um produto (o nosso 'product' de exemplo)."
+        // Arrange
         when(productRepository.findByName(anyString())).thenReturn(Optional.of(product));
 
-        // Act & Assert (Agir e Verificar)
-        // Verificamos se, ao chamar createProduct, uma ResourceConflictException é lançada.
+        // Act & Assert
         assertThrows(ResourceConflictException.class, () -> {
             productService.createProduct(productRequestDTO);
         });

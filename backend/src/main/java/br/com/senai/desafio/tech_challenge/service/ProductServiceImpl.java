@@ -61,12 +61,13 @@ public class ProductServiceImpl implements ProductService {
             Pageable pageable, String search, BigDecimal minPrice, BigDecimal maxPrice,
             Boolean hasDiscount, Boolean onlyOutOfStock, Boolean withCouponApplied) {
 
-        Specification<Product> spec = Specification.where(ProductSpecification.hasText(search))
-                .and(ProductSpecification.hasMinPrice(minPrice))
-                .and(ProductSpecification.hasMaxPrice(maxPrice))
-                .and(ProductSpecification.hasDiscount(hasDiscount))
-                .and(ProductSpecification.isOutOfStock(onlyOutOfStock))
-                .and(ProductSpecification.withCouponApplied(withCouponApplied));
+        Specification<Product> spec =
+                ProductSpecification.hasText(search)
+                        .and(ProductSpecification.hasMinPrice(minPrice))
+                        .and(ProductSpecification.hasMaxPrice(maxPrice))
+                        .and(ProductSpecification.hasDiscount(hasDiscount))
+                        .and(ProductSpecification.isOutOfStock(onlyOutOfStock))
+                        .and(ProductSpecification.withCouponApplied(withCouponApplied));
 
         Page<Product> productPage = productRepository.findAll(spec, pageable);
 
