@@ -28,7 +28,7 @@ export default function CouponsComponent({
   }, []);
 
   return (
-    <div className="p-4">
+    <div className="py-4">
       {error === null ? (
         <>
           <p className="text-sm text-slate-600 mb-2">

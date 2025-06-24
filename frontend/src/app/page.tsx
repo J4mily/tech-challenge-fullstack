@@ -172,7 +172,7 @@ export default function HomePage() {
       return (
         <>
           <div className="flex items-center gap-3 mb-8">
-            <FilePenLine className="h-8 w-8 text-slate-500" />
+            <FilePenLine className="h-9 w-9 text-slate-500" />
             <h2 className="text-3xl font-bold">
               {editingProduct ? "Editar Produto" : "Cadastro de Produto"}
             </h2>

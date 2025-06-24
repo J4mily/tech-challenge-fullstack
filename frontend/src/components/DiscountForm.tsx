@@ -106,36 +106,35 @@ export default function DiscountForm({
   // Se não tem desconto, mostramos as abas para aplicar um novo.
   return (
     <>
-      <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-100 p-1 mt-1">
+      <div className="grid grid-cols-2 gap-2 rounded-lg  p-1 mt-1">
         <button
           onClick={() => setActiveTab("coupon")}
-          className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md border text-sm font-medium transition-colors duration-200 ${
+          className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
             activeTab === "coupon"
-              ? "bg-slate-900 text-white border-slate-900"
-              : "text-slate-700 border-slate-300 hover:bg-slate-100"
+              ? "bg-slate-900 text-white"
+              : "bg-white text-slate-800 border border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <Tag className="h-4 w-4" />
+          <Tag className="h-6 w-4" />
           <span className="leading-none">Código Cupom</span>
         </button>
 
         <button
           onClick={() => setActiveTab("percent")}
-          className={`flex items-center justify-center w-full py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+          className={`flex items-center justify-center w-full py-2 px-4 text-sm font-medium rounded-md transition-colors duration-200 ${
             activeTab === "percent"
-              ? "bg-slate-900 text-white border-slate-900"
-              : "text-slate-700 border-slate-300 hover:bg-slate-100"
+              ? "bg-slate-900 text-white"
+              : "bg-white text-slate-800 border border-slate-200 hover:bg-slate-50"
           }`}
         >
-          <Percent className="h-4 w-4 mr-2" />
+          <Percent className="h-6 w-4 mr-2" />
           Percentual Direto
         </button>
       </div>
+<hr className="my-6 mx-auto w-3.9/4 border-t border-slate-200" />
 
       {activeTab === "coupon" && (
         <form onSubmit={handleCouponSubmit}>
-          <hr className="my-1 mx-auto w-120 border-t border-slate-200" />
-
           <label
             htmlFor="coupon-code"
             className="block text-sm font-semibold text-slate-900 mb-2"
@@ -176,7 +175,7 @@ export default function DiscountForm({
         <form onSubmit={handlePercentageSubmit}>
           <label
             htmlFor="percentage"
-            className="block text-sm font-medium text-slate-700 mb-1"
+            className="block text-sm font-semibold text-slate-900 mb-2"
           >
             Percentual de desconto
           </label>
@@ -184,16 +183,16 @@ export default function DiscountForm({
             type="number"
             step="0.01"
             min="1"
-            max="80"
+            max="100"
             id="percentage"
-            placeholder="Ex: 10"
+            placeholder="Ex: 10%"
             value={percentage}
             onChange={(e) => setPercentage(e.target.value)}
             required
-            className="block w-full rounded-md border-slate-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm"
+            className="block w-full rounded-md border border-slate-200 bg-white placeholder-slate-400 text-slate-900 focus:border-slate-300 focus:ring-0 sm:text-sm px-4 py-2"
           />
           <p className="text-xs text-slate-500 mt-1">
-            Digite um valor entre 1 e 80.
+            Digite um valor entre 1% e 100%.
           </p>
 
           <div className="mt-8 flex justify-end space-x-3">
