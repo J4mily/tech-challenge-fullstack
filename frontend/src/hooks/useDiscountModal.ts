@@ -6,7 +6,7 @@ import {
   applyCouponDiscount,
   applyPercentageDiscount,
   removeDiscount,
-} from "@/hooks/api";
+} from "@/service/api";
 
 interface UseDiscountModalProps {
   onSuccess: () => void; // Callback para atualizar a lista de produtos

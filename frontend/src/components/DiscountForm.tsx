@@ -157,7 +157,9 @@ export default function DiscountForm({
             className="block w-full rounded-md border border-slate-200 bg-white placeholder-slate-400 text-slate-900 focus:border-slate-300 focus:ring-0 sm:text-sm px-4 py-2"
           />
           <Counpons setCouponCode={setCouponCode} />
-
+          {error && (
+            <p className="text-red-500 text-sm mt-4 text-center">{error}</p>
+          )}
           <div className="mt-8 flex justify-end space-x-3">
             <CancelButton onClick={onCancel}></CancelButton>
             <button
@@ -183,7 +185,7 @@ export default function DiscountForm({
             type="number"
             step="0.01"
             min="1"
-            max="100"
+            max="80"
             id="percentage"
             placeholder="Ex: 10%"
             value={percentage}
@@ -192,7 +194,7 @@ export default function DiscountForm({
             className="block w-full rounded-md border border-slate-200 bg-white placeholder-slate-400 text-slate-900 focus:border-slate-300 focus:ring-0 sm:text-sm px-4 py-2"
           />
           <p className="text-xs text-slate-500 mt-1">
-            Digite um valor entre 1% e 100%.
+            Digite um valor entre 1% e 80%.
           </p>
           <div className="mt-8 flex justify-end space-x-3">
             <CancelButton onClick={onCancel}></CancelButton>
@@ -205,9 +207,6 @@ export default function DiscountForm({
             </button>
           </div>
         </form>
-      )}
-      {error && (
-        <p className="text-red-500 text-sm mt-4 text-center">{error}</p>
       )}
     </>
   );
