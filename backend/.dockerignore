@@ -1,0 +1,42 @@
+# Diretórios de saída do build do Maven e Gradle
+# Isso evita copiar os .jar e classes já compiladas na sua máquina local.
+/target/
+/build/
+
+# Cache do Gradle
+.gradle/
+
+# Arquivos do Maven Wrapper (geralmente não são necessários no build)
+.mvn/
+
+# Arquivos de log
+*.log
+
+# Arquivos específicos de IDEs e editores de código
+# Isso mantém o ambiente de build limpo, independente de onde foi desenvolvido.
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# Arquivos de sistema operacional (macOS e Windows)
+.DS_Store
+Thumbs.db
+
+# Arquivos de configuração de ambiente local
+# Nunca devem ser copiados para a imagem. A configuração é injetada via docker-compose.
+.env
+*.env
+secrets/
+
+# Ignorar o próprio diretório do Git
+.git/
+.gitignore
+
+# Ignorar os arquivos do Docker, pois não são necessários dentro da imagem
+Dockerfile
+docker-compose.yml
