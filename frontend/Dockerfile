@@ -6,6 +6,8 @@ COPY . .
 
 RUN npm ci
 
+RUN npm run build
+
 ENV NODE_ENV production
 
 ENV NEXT_TELEMETRY_DISABLED 1

@@ -1,4 +1,4 @@
-import { getCoupons } from "@/hooks/api";
+import { getCoupons } from "@/service/api";
 import { Coupons } from "@/types";
 import { useEffect, useState } from "react";
 

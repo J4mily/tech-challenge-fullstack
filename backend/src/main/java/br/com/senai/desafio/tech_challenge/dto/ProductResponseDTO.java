@@ -29,6 +29,8 @@ public class ProductResponseDTO {
 
     @JsonProperty("has_coupon_applied")
     private boolean hasCouponApplied;
+    @JsonProperty("coupon_code")
+    private String couponCode;
     @JsonProperty("created_at")
     private Instant createdAt;
     @JsonProperty("updated_at")

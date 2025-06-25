@@ -8,7 +8,7 @@ import {
   updateProduct,
   deleteProduct,
   getProductById,
-} from "@/hooks/api";
+} from "@/service/api";
 import { AxiosError } from "axios";
 
 export function useProductManagement() {

@@ -25,13 +25,11 @@ public class CouponServiceImpl implements CouponService {
     public CouponResponseDTO createCoupon(CouponRequestDTO couponRequestDTO) {
         String normalizedCode = normalizeCode(couponRequestDTO.getCode());
 
-        // Validação de código reservado
         if (RESERVED_CODES.contains(normalizedCode)) {
             throw new ResourceConflictException("O código '" + couponRequestDTO.getCode() + "' é reservado e não pode ser usado.");
         }
 
-        // Validação de unicidade
-        couponRepository.findByCode(normalizedCode).ifPresent(c -> {
+        couponRepository.findByCodeAndDeletedAtIsNull(normalizedCode).ifPresent(c -> {
             throw new ResourceConflictException("O código de cupom '" + couponRequestDTO.getCode() + "' já existe.");
         });
 
@@ -45,14 +43,13 @@ public class CouponServiceImpl implements CouponService {
                 .build();
 
         Coupon savedCoupon = couponRepository.save(coupon);
-
         return mapToCouponResponseDTO(savedCoupon);
     }
 
     @Override
     public CouponResponseDTO getCouponByCode(String code) {
         String normalizedCode = normalizeCode(code);
-        Coupon coupon = couponRepository.findByCode(normalizedCode)
+        Coupon coupon = couponRepository.findByCodeAndDeletedAtIsNull(normalizedCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Cupom com o código '" + code + "' não encontrado."));
         return mapToCouponResponseDTO(coupon);
     }
@@ -75,7 +72,7 @@ public class CouponServiceImpl implements CouponService {
     }
     @Override
     public List<CouponResponseDTO> listAllCoupons() {
-        return couponRepository.findAll().stream()
+        return couponRepository.findByDeletedAtIsNull().stream()
                 .map(this::mapToCouponResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -84,7 +81,7 @@ public class CouponServiceImpl implements CouponService {
     @Transactional
     public CouponResponseDTO updateCoupon(String code, CouponUpdateDTO couponUpdateDTO) {
         String normalizedCode = normalizeCode(code);
-        Coupon couponToUpdate = couponRepository.findByCode(normalizedCode)
+        Coupon couponToUpdate = couponRepository.findByCodeAndDeletedAtIsNull(normalizedCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Cupom com o código '" + code + "' não encontrado."));
 
         // Lógica de atualização parcial
@@ -111,9 +108,10 @@ public class CouponServiceImpl implements CouponService {
     @Transactional
     public void deleteCoupon(String code) {
         String normalizedCode = normalizeCode(code);
-        Coupon coupon = couponRepository.findByCode(normalizedCode)
-                .orElseThrow(() -> new ResourceNotFoundException("Cupom com o código '" + code + "' não encontrado."));
+        Coupon coupon = couponRepository.findByCodeAndDeletedAtIsNull(normalizedCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Cupom com o código '" + code + "' não encontrado ou já inativo."));
 
-        couponRepository.delete(coupon);
+        coupon.setDeletedAt(java.time.Instant.now());
+        couponRepository.save(coupon);
     }
 }

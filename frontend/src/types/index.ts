@@ -1,5 +1,4 @@
 export interface Product {
-  couponCode: string | null | undefined;
   id: number;
   name: string;
   description: string;
@@ -8,10 +7,16 @@ export interface Product {
   price: number;
   finalPrice: number;
   discount: {
-    type: string;
+    type: couponType;
     value: number;
   } | null;
-  hasCouponApplied: boolean;
+  has_coupon_applied: boolean;
+  coupon_code: string | null | undefined;
+}
+
+enum couponType{
+  FIXED = "FIXED",
+  PERCENT = "PERCENT"
 }
 
 export interface Meta {

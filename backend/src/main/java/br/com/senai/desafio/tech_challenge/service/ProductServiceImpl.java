@@ -13,6 +13,7 @@ import br.com.senai.desafio.tech_challenge.repository.ProductDiscountRepository;
 import br.com.senai.desafio.tech_challenge.repository.ProductRepository;
 import br.com.senai.desafio.tech_challenge.repository.ProductSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -36,18 +37,27 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponseDTO createProduct(ProductRequestDTO productRequestDTO) {
         String normalizedName = normalizeName(productRequestDTO.getName());
+
         productRepository.findByName(normalizedName).ifPresent(product -> {
             throw new ResourceConflictException("Já existe um produto com o nome '" + productRequestDTO.getName() + "'.");
         });
+
         Product newProduct = Product.builder()
                 .name(normalizedName)
                 .description(productRequestDTO.getDescription())
                 .price(productRequestDTO.getPrice())
                 .stock(productRequestDTO.getStock())
                 .build();
-        Product savedProduct = productRepository.save(newProduct);
-        return mapToProductResponseDTO(savedProduct);
+
+        try {
+            Product savedProduct = productRepository.save(newProduct);
+            return mapToProductResponseDTO(savedProduct);
+
+        } catch (DataIntegrityViolationException e) {
+            throw new ResourceConflictException("Já existe um produto com o nome '" + productRequestDTO.getName() + "'.");
+        }
     }
+
 
     @Override
     public ProductResponseDTO getProductById(Long id) {
@@ -221,6 +231,7 @@ public class ProductServiceImpl implements ProductService {
     private ProductResponseDTO mapToProductResponseDTO(Product product, ProductDiscount activeDiscount) {
         BigDecimal finalPrice = product.getPrice();
         AppliedDiscountDTO discountDTO = null;
+        String couponCode = null;
 
         if (activeDiscount != null) {
             finalPrice = calculateFinalPrice(product.getPrice(), activeDiscount);
@@ -229,20 +240,30 @@ public class ProductServiceImpl implements ProductService {
                     .value(activeDiscount.getValue())
                     .appliedAt(activeDiscount.getAppliedAt())
                     .build();
+
+            if (activeDiscount.getCoupon() != null) {
+                couponCode = activeDiscount.getCoupon().getCode();
+            }
         }
 
         return ProductResponseDTO.builder()
-                .id(product.getId()).name(product.getName()).description(product.getDescription())
-                .stock(product.getStock()).price(product.getPrice()).finalPrice(finalPrice)
+                .id(product.getId())
+                .name(product.getName())
+                .description(product.getDescription())
+                .stock(product.getStock())
+                .price(product.getPrice())
+                .finalPrice(finalPrice)
                 .isOutOfStock(product.getStock() == 0)
                 .hasCouponApplied(activeDiscount != null && activeDiscount.getCoupon() != null)
+                .couponCode(couponCode)
                 .discount(discountDTO)
-                .createdAt(product.getCreatedAt()).updatedAt(product.getUpdatedAt())
+                .createdAt(product.getCreatedAt())
+                .updatedAt(product.getUpdatedAt())
                 .build();
     }
 
     private ProductResponseDTO mapToProductResponseDTO(Product product) {
-        Optional<ProductDiscount> activeDiscount = productDiscountRepository.findByProductIdAndRemovedAtIsNull(product.getId());
+        Optional<ProductDiscount> activeDiscount = productDiscountRepository.findActiveDiscountWithCouponByProductId(product.getId());
         return mapToProductResponseDTO(product, activeDiscount.orElse(null));
     }
 

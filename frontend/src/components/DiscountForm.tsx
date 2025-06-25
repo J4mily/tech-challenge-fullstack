@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { Percent, Tag } from "lucide-react";
 import Counpons from "./Coupons";
+import axios from "axios";
+import CancelButton from "@/components/CancelButton";
 
 interface DiscountFormProps {
   onApplyCoupon: (code: string) => Promise<void>;
@@ -15,6 +17,17 @@ interface DiscountFormProps {
   } | null;
   appliedCouponCode?: string | null;
 }
+
+const getFriendlyErrorMessage = (error: unknown): string => {
+  if (axios.isAxiosError(error) && error.response) {
+    return error.response.data.message;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return "Ocorreu um erro desconhecido. Verifique sua conexão e tente novamente.";
+};
 
 export default function DiscountForm({
   onApplyCoupon,
@@ -37,11 +50,7 @@ export default function DiscountForm({
     try {
       await onApplyCoupon(couponCode);
     } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Erro desconhecido ao aplicar cupom."
-      );
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -54,11 +63,7 @@ export default function DiscountForm({
     try {
       await onApplyPercentage(Number(percentage));
     } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Erro desconhecido ao aplicar percentual."
-      );
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -70,11 +75,7 @@ export default function DiscountForm({
     try {
       await onRemoveDiscount();
     } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Erro desconhecido ao remover desconto."
-      );
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -91,15 +92,11 @@ export default function DiscountForm({
         <p className="text-sm text-slate-600 mb-2">{discountMessage}</p>
         <p className="text-sm text-slate-600 mb-4">Deseja removê-lo?</p>
 
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        {error && (
+          <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
+        )}
         <div className="flex justify-end space-x-3 mt-6">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="bg-white py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          >
-            Cancelar
-          </button>
+          <CancelButton onClick={onCancel}></CancelButton>
           <button
             onClick={handleRemoveClick}
             disabled={isSubmitting}
@@ -160,15 +157,11 @@ export default function DiscountForm({
             className="block w-full rounded-md border border-slate-200 bg-white placeholder-slate-400 text-slate-900 focus:border-slate-300 focus:ring-0 sm:text-sm px-4 py-2"
           />
           <Counpons setCouponCode={setCouponCode} />
-
+          {error && (
+            <p className="text-red-500 text-sm mt-4 text-center">{error}</p>
+          )}
           <div className="mt-8 flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="bg-white py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            >
-              Cancelar
-            </button>
+            <CancelButton onClick={onCancel}></CancelButton>
             <button
               type="submit"
               disabled={isSubmitting || !couponCode}
@@ -192,7 +185,7 @@ export default function DiscountForm({
             type="number"
             step="0.01"
             min="1"
-            max="100"
+            max="80"
             id="percentage"
             placeholder="Ex: 10%"
             value={percentage}
@@ -201,17 +194,10 @@ export default function DiscountForm({
             className="block w-full rounded-md border border-slate-200 bg-white placeholder-slate-400 text-slate-900 focus:border-slate-300 focus:ring-0 sm:text-sm px-4 py-2"
           />
           <p className="text-xs text-slate-500 mt-1">
-            Digite um valor entre 1% e 100%.
+            Digite um valor entre 1% e 80%.
           </p>
-
           <div className="mt-8 flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="bg-white py-2 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            >
-              Cancelar
-            </button>
+            <CancelButton onClick={onCancel}></CancelButton>
             <button
               type="submit"
               disabled={isSubmitting || !percentage}
@@ -221,9 +207,6 @@ export default function DiscountForm({
             </button>
           </div>
         </form>
-      )}
-      {error && (
-        <p className="text-red-500 text-sm mt-4 text-center">{error}</p>
       )}
     </>
   );
