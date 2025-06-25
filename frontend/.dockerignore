@@ -1,0 +1,38 @@
+# A pasta de dependências do Node.js. É a mais importante a ser ignorada.
+# O Dockerfile irá instalar as dependências dentro do contêiner.
+node_modules/
+
+# Pasta de saída do build do Next.js
+.next/
+
+# Arquivos de configuração de ambiente local.
+# Segredos e URLs de API são injetados pelo docker-compose.
+.env
+.env.local
+.env.development
+.env.production
+*.env
+
+# Arquivos de log do npm e yarn
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Relatórios de teste e cobertura de código
+coverage/
+junit.xml
+
+# Arquivos específicos de IDEs e editores de código
+.idea/
+.vscode/
+
+# Arquivos de sistema operacional (macOS)
+.DS_Store
+
+# Ignorar o próprio diretório do Git
+.git/
+.gitignore
+
+# Ignorar os arquivos do Docker, pois não são necessários dentro da imagem
+Dockerfile
+docker-compose.yml
