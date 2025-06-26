@@ -13,7 +13,7 @@ O projeto foi construído com as seguintes tecnologias e boas práticas:
 - **Linguagem:** Java 17  
 - **Framework:** Spring Boot 3  
 - **Persistência de Dados:** Spring Data JPA com Hibernate  
-- **Banco de Dados:** H2 (relacional em memória)  
+- **Banco de Dados:** PostgreSQL
 - **Build Tool:** Maven  
 - **Validações:** Spring Validation (Bean Validation)  
 - **Documentação da API:** SpringDoc OpenAPI (Swagger UI)  
